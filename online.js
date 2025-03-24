@@ -18,10 +18,13 @@ const elements = {
 
 // Initialize WebSocket connection
 function initializeWebSocket() {
-    // Replace this URL with your deployed server URL
-    const wsUrl = window.location.protocol === 'https:' 
-        ? 'wss://your-server-url.com' 
-        : 'ws://your-server-url.com';
+    // Get the current page protocol and host
+    const isSecure = window.location.protocol === 'https:';
+    const wsProtocol = isSecure ? 'wss://' : 'ws://';
+    
+    // Use the Render.com deployed URL
+    // Replace 'your-app-name' with your actual Render service name
+    const wsUrl = wsProtocol + 'vibe-coding-tetris-battle.onrender.com';
     
     socket = new WebSocket(wsUrl);
     
@@ -36,8 +39,8 @@ function initializeWebSocket() {
     
     socket.onclose = () => {
         console.log('Disconnected from server');
-        // Attempt to reconnect
-        setTimeout(initializeWebSocket, 3000);
+        // Show reconnection message to user
+        alert('Lost connection to server. Please refresh the page to reconnect.');
     };
     
     socket.onerror = (error) => {

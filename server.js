@@ -1,7 +1,20 @@
 const WebSocket = require('ws');
+const http = require('http');
+const express = require('express');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 8080 });
+const app = express();
+const port = process.env.PORT || 8080;
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '.')));
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
 
 // Store active rooms and their players
 const rooms = new Map();
@@ -10,24 +23,28 @@ wss.on('connection', (ws) => {
     console.log('New client connected');
     
     ws.on('message', (message) => {
-        const data = JSON.parse(message);
-        
-        switch (data.type) {
-            case 'create_room':
-                handleCreateRoom(ws);
-                break;
-                
-            case 'join_room':
-                handleJoinRoom(ws, data.roomCode);
-                break;
-                
-            case 'game_state':
-                handleGameState(ws, data);
-                break;
-                
-            case 'game_over':
-                handleGameOver(ws, data);
-                break;
+        try {
+            const data = JSON.parse(message);
+            
+            switch (data.type) {
+                case 'create_room':
+                    handleCreateRoom(ws);
+                    break;
+                    
+                case 'join_room':
+                    handleJoinRoom(ws, data.roomCode);
+                    break;
+                    
+                case 'game_state':
+                    handleGameState(ws, data);
+                    break;
+                    
+                case 'game_over':
+                    handleGameOver(ws, data);
+                    break;
+            }
+        } catch (error) {
+            console.error('Error processing message:', error);
         }
     });
     
@@ -138,4 +155,9 @@ function handleDisconnect(ws) {
     
     // Clean up room
     rooms.delete(ws.roomCode);
-} 
+}
+
+// Start the server
+server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+}); 
